@@ -1,24 +1,24 @@
-// import { BrowserModule } from '@angular/platform-browser';
-import { NgModule } from "@angular/core";
+import { NgModule, Optional, SkipSelf } from '@angular/core';
 
-import { MatToolbarModule, MatListModule } from "@angular/material";
-import { AppRoutingModule } from "./app-routing.module";
-import { AppComponent } from "./app.component";
-import { BrowserAnimationsModule } from "@angular/platform-browser/animations";
-import { ApolloConfigModule } from "./apollo-config.module";
-import { gql } from "graphql-tag";
+import { AppComponent } from './app.component';
+import { CoreModule } from './core/core.module';
 
 @NgModule({
   declarations: [AppComponent],
-  imports: [
-    // BrowserModule,
-    AppRoutingModule,
-    BrowserAnimationsModule,
-    ApolloConfigModule,
-    MatListModule,
-    MatToolbarModule
-  ],
+  imports: [CoreModule],
   providers: [],
   bootstrap: [AppComponent]
 })
-export class AppModule {}
+export class AppModule {
+  constructor(@Optional() @SkipSelf() parentModule: CoreModule) {
+    if (parentModule) {
+      throw new Error(
+        'CoreModule is already loaded. Import it in the AppModule only.'
+      );
+    }
+  }
+  /**
+   * 1º nivel de injeção de dependencias
+   * app.module -> CoreModule
+   */
+}
