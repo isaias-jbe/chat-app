@@ -2,9 +2,10 @@ import { NgModule, Optional, SkipSelf } from '@angular/core';
 
 import { AppComponent } from './app.component';
 import { CoreModule } from './core/core.module';
+import { FileUploadComponent } from './components/file-upload/file-upload.component';
 
 @NgModule({
-  declarations: [AppComponent],
+  declarations: [AppComponent, FileUploadComponent],
   imports: [CoreModule],
   providers: [],
   bootstrap: [AppComponent]
