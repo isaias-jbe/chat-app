@@ -1,16 +1,17 @@
-import { NgModule } from '@angular/core';
+import { NgModule, Optional, SkipSelf } from '@angular/core';
 import { ApolloConfigModule } from '../apollo-config.module';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { MatToolbarModule, MatListModule } from '@angular/material';
-import { NgxFileDropModule } from 'ngx-file-drop';
 
 @NgModule({
-  exports: [
-    ApolloConfigModule,
-    BrowserAnimationsModule,
-    MatToolbarModule,
-    MatListModule,
-    NgxFileDropModule
-  ]
+  exports: [ApolloConfigModule, BrowserAnimationsModule]
 })
-export class CoreModule {}
+export class CoreModule {
+  constructor(@Optional() @SkipSelf() parentModule: CoreModule) {
+    if (parentModule) {
+      throw new Error(
+        `CoreModule is already loaded. Import it in the AppModule only.
+        (O CoreModule já está carregado. Importe-o apenas no AppModule.)`
+      );
+    }
+  }
+}
