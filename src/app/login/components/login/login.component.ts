@@ -1,6 +1,9 @@
-import { Component, OnInit } from '@angular/core';
-import { AuthService } from 'src/app/core/services/auth.service';
 import { Observable } from 'rxjs';
+import { takeWhile } from 'rxjs/operators';
+import { MatSnackBar } from '@angular/material';
+import { Component, OnDestroy, OnInit } from '@angular/core';
+import { AuthService } from 'src/app/core/services/auth.service';
+import { ErrorService } from 'src/app/core/services/error.service';
 import {
   FormBuilder,
   FormControl,
@@ -13,21 +16,25 @@ import {
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.scss']
 })
-export class LoginComponent implements OnInit {
+export class LoginComponent implements OnInit, OnDestroy {
   loginForm: FormGroup;
   configs = {
     isLogin: true,
     actionText: 'SignIn',
-    buttonActionText: 'Create account'
+    buttonActionText: 'Create account',
+    isloading: false
   };
   private nameControl = new FormControl('', [
     Validators.required,
     Validators.minLength(5)
   ]);
+  private alive = true;
 
   constructor(
     private authService: AuthService,
-    private formBuilder: FormBuilder
+    private errorService: ErrorService,
+    private formBuilder: FormBuilder,
+    private matSnakBar: MatSnackBar
   ) {}
 
   ngOnInit() {
@@ -38,18 +45,30 @@ export class LoginComponent implements OnInit {
     this.loginForm = this.formBuilder.group({
       email: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required, Validators.minLength(5)]]
-      // name: ['', [Validators.required, Validators.minLength(5)]]
     });
   }
 
   onSubmit(): void {
+    this.configs.isloading = true;
     const operation: Observable<any> = this.configs.isLogin
       ? this.authService.signinUser(this.loginForm.value)
       : this.authService.signupUser(this.loginForm.value);
 
-    operation.subscribe(res => {
-      console.log('redirecting...', res);
-    });
+    operation.pipe(takeWhile(() => this.alive)).subscribe(
+      res => {
+        console.log('redirecting...', res);
+        this.configs.isloading = false;
+      },
+      error => {
+        console.log(error);
+        this.configs.isloading = false;
+        this.matSnakBar.open(this.errorService.getErrorMessage(error), 'Done', {
+          duration: 5000,
+          verticalPosition: 'top'
+        });
+      },
+      () => console.log('Observable completado!')
+    );
   }
 
   changeAction(): void {
@@ -71,5 +90,9 @@ export class LoginComponent implements OnInit {
   }
   get password(): FormControl {
     return this.loginForm.get('password') as FormControl;
+  }
+
+  ngOnDestroy(): void {
+    this.alive = false;
   }
 }
