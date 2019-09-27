@@ -1,7 +1,7 @@
 import { Observable } from 'rxjs';
 import { takeWhile } from 'rxjs/operators';
 import { MatSnackBar } from '@angular/material';
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, HostBinding, OnDestroy, OnInit } from '@angular/core';
 import { AuthService } from 'src/app/core/services/auth.service';
 import { ErrorService } from 'src/app/core/services/error.service';
 import {
@@ -29,6 +29,8 @@ export class LoginComponent implements OnInit, OnDestroy {
     Validators.minLength(5)
   ]);
   private alive = true;
+
+  @HostBinding('class.app-login-spinner') private applySpinnerClass = true;
 
   constructor(
     private authService: AuthService,

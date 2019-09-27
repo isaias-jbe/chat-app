@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { Observable, ReplaySubject, throwError } from 'rxjs';
+import { catchError, map, tap } from 'rxjs/operators';
 import { Apollo } from 'apollo-angular';
 
 import {
@@ -12,12 +12,14 @@ import {
   providedIn: 'root'
 })
 export class AuthService {
+  private _isAuthenticated = new ReplaySubject<boolean>();
+
   constructor(private apollo: Apollo) {
-    // this.signupUser({
-    //   name: 'Doctor Strange',
-    //   email: 'strange@marvel.com',
-    //   password: '123456'
-    // }).subscribe(res => console.log(`SignUpUser:`, res));
+    this.isAuthenticated.subscribe(is => console.log('Authenticated: ', is));
+  }
+
+  get isAuthenticated(): Observable<boolean> {
+    return this._isAuthenticated.asObservable();
   }
 
   signinUser(variables: {
@@ -29,7 +31,14 @@ export class AuthService {
         mutation: AUTHENTICATE_USER_MUTATION,
         variables
       })
-      .pipe(map(res => res.data.authenticateUser));
+      .pipe(
+        map(res => res.data.authenticateUser),
+        tap(res => this.setAuthState(res !== null)),
+        catchError(error => {
+          this.setAuthState(false);
+          return throwError(error);
+        })
+      );
   }
 
   signupUser(variables: {
@@ -42,6 +51,17 @@ export class AuthService {
         mutation: SIGNUP_USER_MUTATION,
         variables
       })
-      .pipe(map(res => res.data.signupUser));
+      .pipe(
+        map(res => res.data.signupUser),
+        tap(res => this.setAuthState(res !== null)),
+        catchError(error => {
+          this.setAuthState(false);
+          return throwError(error);
+        })
+      );
+  }
+
+  private setAuthState(isAuthenticated: boolean): void {
+    this._isAuthenticated.next(isAuthenticated);
   }
 }
