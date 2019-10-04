@@ -59,6 +59,10 @@ export class LoginComponent implements OnInit, OnDestroy {
     operation.pipe(takeWhile(() => this.alive)).subscribe(
       res => {
         console.log('redirecting...', res);
+        const redirect: string = this.authService.redirectUrl || '/dashboard';
+        // redirect with router
+        console.log('Route to redirect:', redirect);
+        this.authService.redirectUrl = null;
         this.configs.isloading = false;
       },
       error => {
@@ -92,6 +96,15 @@ export class LoginComponent implements OnInit, OnDestroy {
   }
   get password(): FormControl {
     return this.loginForm.get('password') as FormControl;
+  }
+
+  /**
+   * Chama o metodo "toggleKeepSigned()" que manipula a variável que define se
+   * o usuário quer permanecer logado.
+   * Não recebe parametros e não retorna nada
+   */
+  onKeepSigned(): void {
+    this.authService.toggleKeepSigned();
   }
 
   ngOnDestroy(): void {

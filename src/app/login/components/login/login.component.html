@@ -59,6 +59,11 @@
           </mat-error>
         </mat-form-field>
 
+        <mat-slide-toggle
+          [checked]="authService.keepSigned"
+          (change)="onKeepSigned()"
+          >Keep me signed in</mat-slide-toggle
+        >
         <button
           mat-button
           type="submit"
