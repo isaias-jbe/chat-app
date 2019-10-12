@@ -1,6 +1,6 @@
-import { Observable } from 'rxjs';
 import { takeWhile } from 'rxjs/operators';
 import { MatSnackBar } from '@angular/material';
+import { Router } from '@angular/router';
 import { Component, HostBinding, OnDestroy, OnInit } from '@angular/core';
 import { AuthService } from 'src/app/core/services/auth.service';
 import { ErrorService } from 'src/app/core/services/error.service';
@@ -33,14 +33,20 @@ export class LoginComponent implements OnInit, OnDestroy {
   @HostBinding('class.app-login-spinner') private applySpinnerClass = true;
 
   constructor(
-    private authService: AuthService,
+    public authService: AuthService,
     private errorService: ErrorService,
     private formBuilder: FormBuilder,
+    private router: Router,
     private matSnakBar: MatSnackBar
   ) {}
 
   ngOnInit() {
     this.createForm();
+    const userData = this.authService.getRememberMe();
+    if (userData) {
+      this.email.setValue(userData.email);
+      this.password.setValue(userData.password);
+    }
   }
 
   createForm(): void {
@@ -52,16 +58,20 @@ export class LoginComponent implements OnInit, OnDestroy {
 
   onSubmit(): void {
     this.configs.isloading = true;
-    const operation: Observable<any> = this.configs.isLogin
+
+    const operation = this.configs.isLogin
       ? this.authService.signinUser(this.loginForm.value)
       : this.authService.signupUser(this.loginForm.value);
 
     operation.pipe(takeWhile(() => this.alive)).subscribe(
       res => {
-        console.log('redirecting...', res);
+        // Chama o metodo que grava o email/password no localStorage
+        this.authService.setRememberMe(this.loginForm.value);
+
         const redirect: string = this.authService.redirectUrl || '/dashboard';
         // redirect with router
-        console.log('Route to redirect:', redirect);
+        console.log('redirecting...', redirect);
+        this.router.navigate([redirect]);
         this.authService.redirectUrl = null;
         this.configs.isloading = false;
       },
@@ -105,6 +115,15 @@ export class LoginComponent implements OnInit, OnDestroy {
    */
   onKeepSigned(): void {
     this.authService.toggleKeepSigned();
+  }
+
+  /**
+   * Aciona o metodo "toggleRememberMe()", responssável por setar a chave
+   * "agc-remember-me". Esta chave informa se o usuário optou por grava os
+   * dados de login (email/password) no localStorage
+   */
+  onRememberMe(): void {
+    this.authService.toggleRememberMe();
   }
 
   ngOnDestroy(): void {

@@ -3,6 +3,7 @@ import { Router } from '@angular/router';
 import { Observable, ReplaySubject, of, throwError } from 'rxjs';
 import { catchError, map, mergeMap, tap } from 'rxjs/operators';
 import { Apollo } from 'apollo-angular';
+import { Base64 } from 'js-base64';
 
 import {
   AUTHENTICATE_USER_MUTATION,
@@ -20,7 +21,9 @@ export class AuthService {
   redirectUrl: string;
   // Verifica se o usuário que permanecer logado
   keepSigned: boolean;
-  private _isAuthenticated = new ReplaySubject<boolean>();
+  // Verifica se o usuário que armazenar os dados de login (emaile/password)
+  rememberMe: boolean;
+  private _isAuthenticated = new ReplaySubject<boolean>(1);
 
   constructor(private apollo: Apollo, private router: Router) {
     this.isAuthenticated.subscribe(is => console.log('AuthState: ', is));
@@ -36,6 +39,9 @@ export class AuthService {
   init(): void {
     this.keepSigned = JSON.parse(
       window.localStorage.getItem(StorageKeys.KEEP_SIGNED)
+    );
+    this.rememberMe = JSON.parse(
+      window.localStorage.getItem(StorageKeys.REMEMBER_ME)
     );
   }
 
@@ -109,7 +115,7 @@ export class AuthService {
   }
 
   /**
-   * Metodo para definir se o usuário que permanecer logado
+   * Metodo para definir se o usuário optou por permanecer logado
    * Não rebe parametos e não tem retorno, apenas seta a
    * chave 'agc-keep-signed' do local storage para true/(false/null)
    */
@@ -119,6 +125,57 @@ export class AuthService {
       StorageKeys.KEEP_SIGNED,
       this.keepSigned.toString()
     );
+  }
+
+  /**
+   * Metodo para definir se o usuário optou por gravar dados do login(email/senha)
+   * Não rebe parametos e não tem retorno, apenas seta a
+   * chave 'agc-remember-me' do local storage para true/(false/null)
+   */
+  toggleRememberMe(): void {
+    this.rememberMe = !this.rememberMe;
+    window.localStorage.setItem(
+      StorageKeys.REMEMBER_ME,
+      this.rememberMe.toString()
+    );
+    if (!this.rememberMe) {
+      window.localStorage.removeItem(StorageKeys.USER_EMAIL);
+      window.localStorage.removeItem(StorageKeys.USER_PASSWORD);
+    }
+  }
+
+  /**
+   * Grava os dados de login email/password no localStorage
+   * @user Object {email: string, password: string}
+   */
+  setRememberMe(user: { email: string; password: string }): void {
+    if (this.rememberMe) {
+      window.localStorage.setItem(
+        StorageKeys.USER_EMAIL,
+        Base64.encode(user.email)
+      );
+      window.localStorage.setItem(
+        StorageKeys.USER_PASSWORD,
+        Base64.encode(user.password)
+      );
+    }
+  }
+
+  /**
+   * Recupera os dados de login email/password, armazenados no localStorage
+   * @returns user: {email: string, password: string}
+   */
+  getRememberMe(): { email: string; password: string } {
+    if (!this.rememberMe) {
+      return null;
+    }
+
+    return {
+      email: Base64.decode(window.localStorage.getItem(StorageKeys.USER_EMAIL)),
+      password: Base64.decode(
+        window.localStorage.getItem(StorageKeys.USER_PASSWORD)
+      )
+    };
   }
 
   /**
@@ -144,7 +201,7 @@ export class AuthService {
       return of();
     }
 
-    return this.validateToken().pipe(
+    this.validateToken().pipe(
       tap(authData => {
         const token = window.localStorage.getItem(StorageKeys.AUTH_TOKEN);
         this.setAuthState({

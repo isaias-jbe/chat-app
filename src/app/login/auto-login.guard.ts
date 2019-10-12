@@ -5,9 +5,10 @@ import {
   Router,
   RouterStateSnapshot
 } from '@angular/router';
-import { AuthService } from '../core/services/auth.service';
-import { map, tap } from 'rxjs/operators';
 import { Observable, of } from 'rxjs';
+import { map, tap } from 'rxjs/operators';
+
+import { AuthService } from '../core/services/auth.service';
 
 @Injectable({ providedIn: 'root' })
 export class AutoLoginGuard implements CanActivate {
@@ -17,12 +18,11 @@ export class AutoLoginGuard implements CanActivate {
     route: ActivatedRouteSnapshot,
     state: RouterStateSnapshot
   ): Observable<boolean> {
-    // return this.authService.isAuthenticated.pipe(
-    //   tap(isAuthenticated =>
-    //     isAuthenticated ? this.router.navigate(['/dashboard']) : null
-    //   ),
-    //   map(isAuthenticated => !isAuthenticated)
-    // );
-    return of(true);
+    return this.authService.isAuthenticated.pipe(
+      tap(isAuthenticated =>
+        isAuthenticated ? this.router.navigate(['/dashboard']) : null
+      ),
+      map(isAuthenticated => !isAuthenticated)
+    );
   }
 }

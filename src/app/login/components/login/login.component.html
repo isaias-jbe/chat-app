@@ -64,6 +64,11 @@
           (change)="onKeepSigned()"
           >Keep me signed in</mat-slide-toggle
         >
+        <mat-slide-toggle
+          [checked]="authService.rememberMe"
+          (change)="onRememberMe()"
+          >Remember me</mat-slide-toggle
+        >
         <button
           mat-button
           type="submit"

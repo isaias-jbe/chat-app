@@ -33,9 +33,8 @@ export class AuthGuard implements CanActivate, CanActivateChild, CanLoad {
   }
 
   canLoad(route: Route): Observable<boolean> {
-    const url = window.location.pathname;
-    console.log(`link wiondow: ${url}`);
-    console.log(`link routePath: ${route.path}`);
+    // const url = window.location.pathname;
+    const url = route.path;
     return this.checkAuthState(url).pipe(take(1));
   }
 
