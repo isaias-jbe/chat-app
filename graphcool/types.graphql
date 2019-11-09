@@ -15,7 +15,7 @@ type User @model {
 
 type Chat @model {
   id: ID! @isUnique
-  title: String!
+  title: String
   isGroup: Boolean! @defaultValue(value: "false")
   createdAt: DateTime!
   updatedAt: DateTime!
